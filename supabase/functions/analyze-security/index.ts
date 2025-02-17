@@ -39,7 +39,15 @@ async function analyzeWithOpenAI(code: string, language: string) {
     }),
   });
 
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+  }
+
   const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Invalid response format from OpenAI API');
+  }
+
   return data.choices[0].message.content;
 }
 
@@ -64,7 +72,15 @@ async function analyzeWithGemini(code: string, language: string) {
     }),
   });
 
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+  }
+
   const data = await response.json();
+  if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    throw new Error('Invalid response format from Gemini API');
+  }
+
   return data.candidates[0].content.parts[0].text;
 }
 
@@ -92,7 +108,15 @@ async function analyzeWithDeepseek(code: string, language: string) {
     }),
   });
 
+  if (!response.ok) {
+    throw new Error(`Deepseek API error: ${response.status} ${response.statusText}`);
+  }
+
   const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Invalid response format from Deepseek API');
+  }
+
   return data.choices[0].message.content;
 }
 
@@ -104,25 +128,35 @@ serve(async (req) => {
   try {
     const { code, language, model } = await req.json() as AnalysisRequest;
 
+    if (!code || !language || !model) {
+      throw new Error('Missing required parameters');
+    }
+
     let analysis;
     let issues = [];
 
     switch (model) {
       case 'gpt4':
+        if (!OPENAI_API_KEY) throw new Error('OpenAI API key not configured');
         analysis = await analyzeWithOpenAI(code, language);
         break;
       case 'gemini':
+        if (!GEMINI_API_KEY) throw new Error('Gemini API key not configured');
         analysis = await analyzeWithGemini(code, language);
         break;
       case 'deepseek':
+        if (!DEEPSEEK_API_KEY) throw new Error('Deepseek API key not configured');
         analysis = await analyzeWithDeepseek(code, language);
         break;
       default:
         throw new Error('Invalid model selected');
     }
 
+    if (!analysis) {
+      throw new Error('No analysis generated');
+    }
+
     // Extract potential issues from the analysis
-    // This is a simple example - in production you might want to use more sophisticated parsing
     const severityKeywords = {
       critical: ['critical', 'severe', 'high risk', 'vulnerability'],
       warning: ['warning', 'moderate', 'potential risk'],
@@ -165,6 +199,16 @@ serve(async (req) => {
       issues.push(currentIssue);
     }
 
+    // Ensure we have at least one issue
+    if (issues.length === 0) {
+      issues.push({
+        id: 'issue-1',
+        severity: 'info',
+        title: 'Analysis Complete',
+        description: 'The analysis was completed but no specific issues were identified in the standard format. Please refer to the full analysis text for details.',
+      });
+    }
+
     return new Response(
       JSON.stringify({
         analysis,
@@ -177,7 +221,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-security function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
