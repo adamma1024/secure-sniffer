@@ -1,6 +1,8 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
+import OpenAI from "npm:openai";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -78,14 +80,18 @@ async function analyzeWithGemini(code: string, language: string) {
 }
 
 async function analyzeWithDeepseek(code: string, language: string) {
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-sonar-small-128k-online',
+  if (!DEEPSEEK_API_KEY) {
+    throw new Error('Deepseek API key not configured');
+  }
+
+  const openai = new OpenAI({
+    apiKey: DEEPSEEK_API_KEY,
+    baseURL: 'https://api.deepseek.com/v1',
+  });
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'deepseek-reasoner',
       messages: [
         {
           role: 'system',
@@ -98,19 +104,18 @@ async function analyzeWithDeepseek(code: string, language: string) {
       ],
       temperature: 0.2,
       max_tokens: 1000,
-    }),
-  });
+    });
 
-  if (!response.ok) {
-    throw new Error(`Deepseek API error: ${response.status} ${response.statusText}`);
+    const analysis = completion.choices[0]?.message?.content;
+    if (!analysis) {
+      throw new Error('No analysis generated from Deepseek');
+    }
+
+    return analysis;
+  } catch (error) {
+    console.error('Deepseek analysis error:', error);
+    throw new Error(`Deepseek API error: ${error.message}`);
   }
-
-  const data = await response.json();
-  if (!data.choices?.[0]?.message?.content) {
-    throw new Error('Invalid response format from Deepseek API');
-  }
-
-  return data.choices[0].message.content;
 }
 
 serve(async (req) => {
