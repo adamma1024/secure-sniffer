@@ -19,26 +19,29 @@ interface AnalysisRequest {
   model: string;
 }
 
+const CHATGPT_Client = new OpenAI({
+  apiKey: OPENAI_API_KEY
+});
+
+const DEEPSEEK_Client = new OpenAI({
+  apiKey: DEEPSEEK_API_KEY,
+  baseURL: 'https://api.deepseek.com/v1',
+});
+
 async function analyzeWithOpenAI(code: string, language: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a security expert analyzing code for vulnerabilities. Provide a detailed analysis focusing on security issues.',
-        },
-        {
-          role: 'user',
-          content: `Please analyze this ${language} code for security vulnerabilities:\n\n${code}`,
-        },
-      ],
-    }),
+  const response = await CHATGPT_Client.chat.completions.create({
+    model: "gpt-4o-mini",
+    store: true,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a security expert analyzing code for vulnerabilities. Provide a detailed analysis focusing on security issues.',
+      },
+      {
+        role: 'user',
+        content: `Please analyze this ${language} code for security vulnerabilities:\n\n${code}`,
+      },
+    ]
   });
 
   if (!response.ok) {
@@ -90,7 +93,7 @@ async function analyzeWithDeepseek(code: string, language: string) {
   });
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await DEEPSEEK_Client.chat.completions.create({
       model: 'deepseek-reasoner',
       messages: [
         {
@@ -165,12 +168,12 @@ serve(async (req) => {
 
     lines.forEach((line, index) => {
       const lowerLine = line.toLowerCase();
-      
+
       if (line.match(/^[A-Z]/) && line.length < 100) {
         if (currentIssue) {
           issues.push(currentIssue);
         }
-        
+
         let severity = 'info';
         for (const [sev, keywords] of Object.entries(severityKeywords)) {
           if (keywords.some(keyword => lowerLine.includes(keyword))) {
@@ -178,7 +181,7 @@ serve(async (req) => {
             break;
           }
         }
-        
+
         currentIssue = {
           id: `issue-${issues.length + 1}`,
           severity,
@@ -215,7 +218,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-security function:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
         details: error.stack
       }),
