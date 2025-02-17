@@ -17,7 +17,7 @@ const Index = () => {
     setIsAnalyzing(true);
     try {
       const response = await fetch(
-        'https://YOUR_PROJECT_REF.supabase.co/functions/v1/analyze-security',
+        'https://ukidrzpiddcaklaqkijf.supabase.co/functions/v1/analyze-security',
         {
           method: 'POST',
           headers: {
