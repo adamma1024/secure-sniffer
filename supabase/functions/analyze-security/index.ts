@@ -175,6 +175,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Error in analyze-security function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
