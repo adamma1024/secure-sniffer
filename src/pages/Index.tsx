@@ -11,36 +11,40 @@ const Index = () => {
   const [selectedModel, setSelectedModel] = useState('gpt4');
   const [issues, setIssues] = useState<SecurityIssue[]>([]);
   const [llmResponse, setLlmResponse] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAnalyze = async (code: string, language: string) => {
-    // TODO: Implement actual analysis logic with selected model
-    // This is a mock response for demonstration
-    const mockIssues: SecurityIssue[] = [
-      {
-        id: '1',
-        severity: 'critical',
-        title: 'SQL Injection Vulnerability',
-        description: 'Direct use of user input in SQL queries can lead to SQL injection attacks.',
-        lineNumber: 23,
-      },
-      {
-        id: '2',
-        severity: 'warning',
-        title: 'Insecure Password Storage',
-        description: 'Passwords should be hashed using a strong algorithm before storage.',
-        lineNumber: 45,
-      },
-      {
-        id: '3',
-        severity: 'info',
-        title: 'Missing Input Validation',
-        description: 'Consider adding input validation to prevent potential security issues.',
-        lineNumber: 12,
-      },
-    ];
-    
-    setIssues(mockIssues);
-    setLlmResponse("I've analyzed the code and found several security concerns. The most critical issue is an SQL injection vulnerability on line 23, where user input is directly concatenated into SQL queries without proper sanitization. Additionally, there's an insecure password storage mechanism that should be updated to use modern hashing algorithms. I recommend implementing prepared statements for database queries and using bcrypt or Argon2 for password hashing.");
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch(
+        'https://YOUR_PROJECT_REF.supabase.co/functions/v1/analyze-security',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            code,
+            language,
+            model: selectedModel,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const data = await response.json();
+      setLlmResponse(data.analysis);
+      setIssues(data.issues);
+    } catch (error) {
+      console.error('Error analyzing code:', error);
+      setLlmResponse('Error analyzing code. Please try again.');
+      setIssues([]);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
