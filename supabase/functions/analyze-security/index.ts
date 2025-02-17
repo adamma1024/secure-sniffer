@@ -1,6 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -52,36 +52,29 @@ async function analyzeWithOpenAI(code: string, language: string) {
 }
 
 async function analyzeWithGemini(code: string, language: string) {
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': GEMINI_API_KEY,
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `As a security expert, analyze this ${language} code for vulnerabilities:\n\n${code}`,
-        }],
-      }],
-      generationConfig: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.8,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
   }
 
-  const data = await response.json();
-  if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-    throw new Error('Invalid response format from Gemini API');
-  }
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-  return data.candidates[0].content.parts[0].text;
+  const prompt = `As a security expert, analyze this ${language} code for vulnerabilities and provide a detailed report:\n\n${code}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const analysis = response.text();
+
+    if (!analysis) {
+      throw new Error('No analysis generated from Gemini');
+    }
+
+    return analysis;
+  } catch (error) {
+    console.error('Gemini analysis error:', error);
+    throw new Error(`Gemini API error: ${error.message}`);
+  }
 }
 
 async function analyzeWithDeepseek(code: string, language: string) {
@@ -156,21 +149,18 @@ serve(async (req) => {
       throw new Error('No analysis generated');
     }
 
-    // Extract potential issues from the analysis
     const severityKeywords = {
       critical: ['critical', 'severe', 'high risk', 'vulnerability'],
       warning: ['warning', 'moderate', 'potential risk'],
       info: ['info', 'suggestion', 'recommendation'],
     };
 
-    // Simple parsing of the analysis to create structured issues
     const lines = analysis.split('\n');
     let currentIssue: any = null;
 
     lines.forEach((line, index) => {
       const lowerLine = line.toLowerCase();
       
-      // Try to detect issues based on common patterns
       if (line.match(/^[A-Z]/) && line.length < 100) {
         if (currentIssue) {
           issues.push(currentIssue);
@@ -199,7 +189,6 @@ serve(async (req) => {
       issues.push(currentIssue);
     }
 
-    // Ensure we have at least one issue
     if (issues.length === 0) {
       issues.push({
         id: 'issue-1',
