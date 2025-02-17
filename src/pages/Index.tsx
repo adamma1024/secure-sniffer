@@ -6,6 +6,7 @@ import { SecurityIssues, SecurityIssue } from '@/components/SecurityIssues';
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [selectedModel, setSelectedModel] = useState('gpt4');
@@ -16,26 +17,18 @@ const Index = () => {
   const handleAnalyze = async (code: string, language: string) => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch(
-        'https://ukidrzpiddcaklaqkijf.supabase.co/functions/v1/analyze-security',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            language,
-            model: selectedModel,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('analyze-security', {
+        body: {
+          code,
+          language,
+          model: selectedModel,
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error('Analysis failed');
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       setLlmResponse(data.analysis);
       setIssues(data.issues);
     } catch (error) {
