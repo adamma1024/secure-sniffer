@@ -1,0 +1,20 @@
+{
+  "description": "Improper Authentication - Application does not properly verify user identities.",
+  "examples": [
+    {
+      "language": "Python",
+      "code": "def authenticate(user, password):\n    if user == 'admin' and password == 'password123':\n        return 'Access granted'\n    return 'Access denied'\n\nprint(authenticate('admin', 'password123'))",
+      "description": "Hardcoded credentials allow attackers to bypass authentication."
+    },
+    {
+      "language": "Node.js",
+      "code": "app.get('/data', (req, res) => {\n    if (req.query.api_key === '123456') {\n        res.send('Access granted');\n    } else {\n        res.send('Access denied');\n    }\n});",
+      "description": "Weak API key authentication that can be easily exploited."
+    },
+    {
+      "language": "Java",
+      "code": "public boolean authenticate(String user, String password) {\n    return user.equals(\"admin\") && password.equals(\"password123\");\n}",
+      "description": "Hardcoded password in Java function leads to authentication bypass."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "description": "Cross-Site Request Forgery (CSRF) - Lack of token verification.",
+  "examples": [
+    {
+      "language": "Python",
+      "code": "from flask import Flask, request\n\napp = Flask(__name__)\n\nbalance = 1000\n\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    global balance\n    amount = int(request.form.get('amount', 0))\n    balance -= amount\n    return f'Transferred {amount}, Remaining: {balance}'\n\napp.run(debug=True)",
+      "description": "CSRF attack possible due to lack of anti-CSRF tokens in Flask app."
+    },
+    {
+      "language": "Node.js",
+      "code": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst app = express();\n\napp.use(bodyParser.urlencoded({ extended: true }));\n\napp.post('/transfer', (req, res) => {\n    res.send(`Transferred ${req.body.amount}`); // No CSRF protection\n});\n\napp.listen(3000);",
+      "description": "CSRF vulnerability due to missing CSRF tokens in Express.js app."
+    },
+    {
+      "language": "Java",
+      "code": "@RestController\npublic class CSRFController {\n    @PostMapping(\"/transfer\")\n    public String transfer(@RequestParam int amount) {\n        return \"Transferred: \" + amount;\n    }\n}",
+      "description": "Spring Boot API lacks CSRF protection, making it vulnerable to CSRF attacks."
+    }
+  ]
+}

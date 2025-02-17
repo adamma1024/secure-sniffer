@@ -1,0 +1,20 @@
+{
+  "description": "Cross-Site Scripting (XSS) - Improper Neutralization of Input During Web Page Generation.",
+  "examples": [
+    {
+      "language": "Python",
+      "code": "from flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/xss')\ndef xss():\n    comment = request.args.get('comment', '')\n    return f'<p>User Comment: {comment}</p>'  # No sanitization\n\napp.run(debug=True)",
+      "description": "Flask app vulnerable to XSS as it directly renders user input."
+    },
+    {
+      "language": "Node.js",
+      "code": "const express = require('express');\nconst app = express();\n\napp.set('view engine', 'ejs');\n\napp.get('/xss', (req, res) => {\n    let comment = req.query.comment || '';\n    res.render('index', { comment: comment }); // No sanitization\n});\n\napp.listen(3000);",
+      "description": "Node.js app using EJS without escaping user input, allowing XSS attacks."
+    },
+    {
+      "language": "Java",
+      "code": "@WebServlet(\"/xss\")\npublic class XSSServlet extends HttpServlet {\n    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {\n        String comment = request.getParameter(\"comment\");\n        response.getWriter().println(\"<p>\" + comment + \"</p>\"); // No sanitization\n    }\n}",
+      "description": "Java Servlet that echoes user input directly into the response, making it vulnerable to XSS."
+    }
+  ]
+}

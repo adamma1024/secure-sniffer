@@ -1,0 +1,20 @@
+{
+  "description": "Missing Authorization - Application does not check if a user is allowed to perform an action.",
+  "examples": [
+    {
+      "language": "Python",
+      "code": "from flask import Flask\napp = Flask(__name__)\n\n@app.route('/admin')\ndef admin():\n    return 'Welcome Admin!'\n\napp.run()",
+      "description": "Flask app allows access to admin panel without checking user privileges."
+    },
+    {
+      "language": "Node.js",
+      "code": "app.get('/admin', (req, res) => {\n    res.send('Welcome, Admin!');\n});",
+      "description": "No authorization check in Node.js app, allowing unauthorized users to access admin routes."
+    },
+    {
+      "language": "Java",
+      "code": "@RequestMapping(\"/admin\")\npublic String adminPanel() {\n    return \"Admin Access Granted\";\n}",
+      "description": "Spring Boot controller lacks authorization check, making the admin panel publicly accessible."
+    }
+  ]
+}

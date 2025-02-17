@@ -1,0 +1,20 @@
+{
+  "description": "Incorrect Authorization - Application applies incorrect access controls, allowing unauthorized actions.",
+  "examples": [
+    {
+      "language": "Python",
+      "code": "def is_admin(user):\n    return user in [\"guest\", \"admin\"]  # Incorrect check\n\nprint(is_admin(\"guest\"))  # Returns True, allowing unauthorized access",
+      "description": "Logic error in Python function grants admin access to unauthorized users."
+    },
+    {
+      "language": "Node.js",
+      "code": "app.get('/deleteUser', (req, res) => {\n    if (req.query.user === 'admin') {\n        res.send('User deleted');\n    } else {\n        res.send('Unauthorized');\n    }\n});",
+      "description": "Incorrect authorization check only verifies username instead of authentication status."
+    },
+    {
+      "language": "Java",
+      "code": "public boolean isAuthorized(User user) {\n    return user.getRole().contains(\"user\"); // Grants admin privileges to regular users\n}",
+      "description": "Incorrect role validation in Java application allows unauthorized actions."
+    }
+  ]
+}
