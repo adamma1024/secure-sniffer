@@ -3,13 +3,8 @@ export const generatePromptsAsSecurityAnalyst = (language: string, scenario: str
   You are an expert software developer and security analyst. Given the following scenario, please generate the required code in ${language} that meets the specified functionality. 
   Additionally, provide an educational analysis discussing:
   1. The potential risks inherent in this scenario (e.g., security, performance, maintainability).
-  2. Why the generated code helps mitigate these risks.
-  3. Recommendations tailored for different user roles:
-    - Newbie: Explain basics and best practices.
-    - Engineer: Outline advanced pitfalls and optimizations.
-    - Manager: Summarize the risks and benefits in business terms.
-    - Designer: Highlight user experience and interface safety considerations.
-  4. Analyze the generated code for vulnerabilities by detecting relevant CWE rules. Cite the specific CWE (e.g., CWE-79 for Cross-Site Scripting).
+  2. Why the generated code helps mitigate these risks. Specify which lines.
+  3. Analyze the generated code for vulnerabilities by detecting relevant CWE rules. Cite the specific CWE (e.g., CWE-79 for Cross-Site Scripting).
 
 
   [Scenario Details]
