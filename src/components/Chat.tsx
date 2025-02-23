@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,9 +60,9 @@ export function Chat() {
       console.error('Error analyzing code:', error);
       setMessages(prev => [
         ...prev,
-        { 
-          role: 'assistant', 
-          content: 'Sorry, there was an error processing your request. Please try again.' 
+        {
+          role: 'assistant',
+          content: 'Sorry, there was an error processing your request. Please try again.'
         }
       ]);
     } finally {
@@ -75,7 +74,7 @@ export function Chat() {
     <div className="flex h-screen">
       <div className="flex-none w-64 p-4 border-r space-y-4">
         <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
-        
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Language</label>
           <Select value={selectedLanguage} onValueChange={(value: Language) => setSelectedLanguage(value)}>
@@ -92,7 +91,7 @@ export function Chat() {
           </Select>
         </div>
       </div>
-      
+
       <div className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">

@@ -1,8 +1,8 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { GoogleGenerativeAI } from "npm:@google/generative-ai";
 import OpenAI from "npm:openai";
+import { generatePromptsAsSecurityAnalyst } from './prompts.ts';
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -34,26 +34,19 @@ async function analyzeWithOpenAI(code: string, language: string) {
     store: true,
     messages: [
       {
-        role: 'system',
-        content: 'You are a security expert analyzing code for vulnerabilities. Provide a detailed analysis focusing on security issues.',
-      },
-      {
         role: 'user',
-        content: `Please analyze this ${language} code for security vulnerabilities:\n\n${code}`,
+        content: generatePromptsAsSecurityAnalyst(language, code),
       },
     ]
   });
 
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+  console.log("OpenAI Res: ", response)
+  const analysis = response.choices[0]?.message?.content;
+  if (!analysis) {
+    throw new Error('No analysis generated from Deepseek');
   }
 
-  const data = await response.json();
-  if (!data.choices?.[0]?.message?.content) {
-    throw new Error('Invalid response format from OpenAI API');
-  }
-
-  return data.choices[0].message.content;
+  return analysis;
 }
 
 async function analyzeWithGemini(code: string, language: string) {
@@ -64,13 +57,14 @@ async function analyzeWithGemini(code: string, language: string) {
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-  const prompt = `As a security expert, analyze this ${language} code for vulnerabilities and provide a detailed report:\n\n${code}`;
+  const prompt = generatePromptsAsSecurityAnalyst(language, code);
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const analysis = response.text();
 
+    console.log("Gemini Res: ", response)
     if (!analysis) {
       throw new Error('No analysis generated from Gemini');
     }
@@ -102,13 +96,14 @@ async function analyzeWithDeepseek(code: string, language: string) {
         },
         {
           role: 'user',
-          content: `Please analyze this ${language} code for security vulnerabilities:\n\n${code}`,
+          content: generatePromptsAsSecurityAnalyst(language, code),
         },
       ],
       temperature: 0.2,
       max_tokens: 1000,
     });
 
+    console.log("Deepseek Res: ", completion)
     const analysis = completion.choices[0]?.message?.content;
     if (!analysis) {
       throw new Error('No analysis generated from Deepseek');
@@ -134,7 +129,7 @@ serve(async (req) => {
     }
 
     let analysis;
-    let issues = [];
+    const issues = [];
 
     switch (model) {
       case 'gpt4':

@@ -10,7 +10,6 @@ export const generatePromptsAsSecurityAnalyst = (language: string, scenario: str
     - Manager: Summarize the risks and benefits in business terms.
     - Designer: Highlight user experience and interface safety considerations.
   4. Analyze the generated code for vulnerabilities by detecting relevant CWE rules. Cite the specific CWE (e.g., CWE-79 for Cross-Site Scripting).
-  5. Classify the codes in these keywords: 'critical', 'severe', 'high risk', 'vulnerability', 'warning', 'moderate', 'potential risk', 'info', 'suggestion', 'recommendation'.
 
 
   [Scenario Details]
