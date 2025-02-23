@@ -7,16 +7,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ModelSelector } from "@/components/ModelSelector";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
+const SUPPORTED_LANGUAGES = [
+  { value: 'python', label: 'Python' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'auto', label: 'Auto Detect' },
+] as const;
+
+type Language = typeof SUPPORTED_LANGUAGES[number]['value'];
+
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt4');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>('auto');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +48,7 @@ export function Chat() {
       const { data, error } = await supabase.functions.invoke('analyze-security', {
         body: {
           code: userMessage,
-          language: 'auto',
+          language: selectedLanguage,
           model: selectedModel,
         },
       });
@@ -57,8 +73,24 @@ export function Chat() {
 
   return (
     <div className="flex h-screen">
-      <div className="flex-none w-64 p-4 border-r">
+      <div className="flex-none w-64 p-4 border-r space-y-4">
         <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Language</label>
+          <Select value={selectedLanguage} onValueChange={(value: Language) => setSelectedLanguage(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {SUPPORTED_LANGUAGES.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex-1 flex flex-col">
