@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,7 +32,7 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt4');
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('auto');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>('python'); // Changed default to 'python'
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +75,7 @@ export function Chat() {
     <div className="flex h-screen">
       <div className="flex-none w-64 p-4 border-r space-y-4">
         <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
-
+        
         <div className="space-y-2">
           <label className="text-sm font-medium">Language</label>
           <Select value={selectedLanguage} onValueChange={(value: Language) => setSelectedLanguage(value)}>
@@ -91,7 +92,7 @@ export function Chat() {
           </Select>
         </div>
       </div>
-
+      
       <div className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
