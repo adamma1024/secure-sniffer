@@ -3,7 +3,8 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, User, Code, BookText } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import Markdown from 'react-markdown';
+
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
@@ -31,31 +32,17 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
     const analysisIssue = data.issues?.find(issue => issue.title === "Educational Analysis:");
     return analysisIssue?.description || data.analysis || '';
   };
-  
+
   const ParsedContent = () => {
     if (!isAssistant) {
-      return (
-        <Editor
-          height="200px"
-          defaultLanguage="python"
-          theme="vs-dark"
-          value={content}
-          options={{
-            readOnly: true,
-            minimap: { enabled: false },
-            fontSize: 14,
-            scrollBeyondLastLine: false,
-            wordWrap: 'on'
-          }}
-        />
-      );
+      return <p className="whitespace-pre-wrap">{content}</p>;
     }
 
     try {
       const data: ParsedResponse = JSON.parse(content);
       const generatedCode = getGeneratedCode(data);
       const educationalAnalysis = getEducationalAnalysis(data);
-      
+
       return (
         <div className="space-y-6">
           {generatedCode && (
@@ -65,23 +52,11 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
                 <h3 className="text-lg font-semibold">Generated Code</h3>
               </div>
               <div className="rounded-lg overflow-hidden border">
-                <Editor
-                  height="200px"
-                  defaultLanguage="python"
-                  theme="vs-dark"
-                  value={generatedCode}
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on'
-                  }}
-                />
+                <Markdown>{generatedCode}</Markdown>
               </div>
             </div>
           )}
-          
+
           {educationalAnalysis && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-primary">
@@ -89,9 +64,7 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
                 <h3 className="text-lg font-semibold">Educational Analysis</h3>
               </div>
               <div className="text-muted-foreground space-y-2">
-                {educationalAnalysis.split('\n').map((line: string, i: number) => (
-                  <p key={i}>{line}</p>
-                ))}
+                <Markdown>{educationalAnalysis}</Markdown>
               </div>
             </div>
           )}
@@ -99,21 +72,7 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
       );
     } catch (e) {
       // Fallback to displaying original content in editor
-      return (
-        <Editor
-          height="200px"
-          defaultLanguage="text"
-          theme="vs-dark"
-          value={content}
-          options={{
-            readOnly: true,
-            minimap: { enabled: false },
-            fontSize: 14,
-            scrollBeyondLastLine: false,
-            wordWrap: 'on'
-          }}
-        />
-      );
+      return <p className="whitespace-pre-wrap">{content}</p>;
     }
   };
 
