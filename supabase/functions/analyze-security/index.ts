@@ -1,8 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai";
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "npm:@google/generative-ai";
 import OpenAI from "npm:openai";
-import { generatePromptsAsSecurityAnalyst } from './prompts.ts';
+import { generatePromptsAsSecurityAnalyst, getNewPrompts } from './prompts.ts';
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -35,7 +35,7 @@ async function analyzeWithOpenAI(code: string, language: string) {
     messages: [
       {
         role: 'user',
-        content: generatePromptsAsSecurityAnalyst(language, code),
+        content: getNewPrompts(language, code),
       },
     ]
   });
@@ -43,7 +43,7 @@ async function analyzeWithOpenAI(code: string, language: string) {
   console.log("OpenAI Res: ", response)
   const analysis = response.choices[0]?.message?.content;
   if (!analysis) {
-    throw new Error('No analysis generated from Deepseek');
+    throw new Error('No analysis generated from OpenAI');
   }
 
   return analysis;
@@ -55,7 +55,17 @@ async function analyzeWithGemini(code: string, language: string) {
   }
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const safetySetting = [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+  ]
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", safetySetting });
 
   const prompt = generatePromptsAsSecurityAnalyst(language, code);
 
@@ -157,7 +167,6 @@ serve(async (req) => {
       warning: ['warning', 'moderate', 'potential risk'],
       info: ['info', 'suggestion', 'recommendation'],
     };
-
     const lines = analysis.split('\n');
     let currentIssue: any = null;
 

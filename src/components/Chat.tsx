@@ -14,10 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ParsedResponse } from './ChatMessage.tsx';
 
 interface Message {
   role: 'user' | 'assistant';
-  content: string;
+  content?: string;
+  response?: ParsedResponse;
 }
 
 const SUPPORTED_LANGUAGES = [
@@ -55,8 +57,7 @@ export function Chat() {
 
       if (error) throw error;
 
-      const response = data.analysis || 'No analysis generated.';
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { role: 'assistant', response: data }]);
     } catch (error) {
       console.error('Error analyzing code:', error);
       setMessages(prev => [
@@ -75,7 +76,7 @@ export function Chat() {
     <div className="flex h-screen">
       <div className="flex-none w-64 p-4 border-r space-y-4">
         <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
-        
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Language</label>
           <Select value={selectedLanguage} onValueChange={(value: Language) => setSelectedLanguage(value)}>
@@ -92,7 +93,7 @@ export function Chat() {
           </Select>
         </div>
       </div>
-      
+
       <div className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">

@@ -1,37 +1,28 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, User, Code, BookText } from "lucide-react";
+import { MessageSquare, User, BookText } from "lucide-react";
 import Markdown from 'react-markdown';
 
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
-  content: string;
+  response?: ParsedResponse;
+  content?: string;
 }
 
-interface ParsedResponse {
+export interface ParsedResponse {
   analysis: string;
   issues?: Array<{
     id: string;
+    severity: "info" | "warning";
     title: string;
     description: string;
   }>;
 }
 
-export function ChatMessage({ role, content }: ChatMessageProps) {
+export function ChatMessage({ role, response, content }: ChatMessageProps) {
   const isAssistant = role === 'assistant';
-
-  const getGeneratedCode = (data: ParsedResponse) => {
-    const codeIssue = data.issues?.find(issue => issue.title === "Generated Code:");
-    return codeIssue?.description || '';
-  };
-
-  const getEducationalAnalysis = (data: ParsedResponse) => {
-    const analysisIssue = data.issues?.find(issue => issue.title === "Educational Analysis:");
-    return analysisIssue?.description || data.analysis || '';
-  };
 
   const ParsedContent = () => {
     if (!isAssistant) {
@@ -39,42 +30,20 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
     }
 
     try {
-      const data: ParsedResponse = JSON.parse(content);
-      const generatedCode = getGeneratedCode(data);
-      const educationalAnalysis = getEducationalAnalysis(data);
+      const data: ParsedResponse = response;
 
       return (
         <div className="space-y-6">
-          {generatedCode && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-primary">
-                <Code className="size-5" />
-                <h3 className="text-lg font-semibold">Generated Code</h3>
-              </div>
-              <div className="rounded-lg overflow-hidden border">
-                <Markdown>{generatedCode}</Markdown>
-              </div>
-            </div>
-          )}
-
-          {educationalAnalysis && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-primary">
-                <BookText className="size-5" />
-                <h3 className="text-lg font-semibold">Educational Analysis</h3>
-              </div>
-              <div className="text-muted-foreground space-y-2">
-                <Markdown>{educationalAnalysis}</Markdown>
-              </div>
-            </div>
-          )}
+          <div className="text-muted-foreground space-y-2">
+            <Markdown>{response?.analysis ?? "The server is busy! Please try it again later."}</Markdown>
+          </div>
         </div>
       );
     } catch (e) {
       // Fallback to displaying original content in editor
-      return <p className="whitespace-pre-wrap">{content}</p>;
+      return <p className="whitespace-pre-wrap">{content ?? response?.analysis ?? ""}</p>;
     }
-  };
+  }
 
   return (
     <Card className={`p-4 ${isAssistant ? 'bg-muted' : 'bg-background'}`}>
